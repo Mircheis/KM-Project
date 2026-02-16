@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checklist โครงการฝึกอบรม (ศ.1) - Multi Save</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --bg-color: #f1f5f9;
+            --container-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            
+            --theme-blue-bg: #eff6ff;
+            --theme-blue-border: #bfdbfe;
+            --theme-blue-icon: #3b82f6;
+            
+            --theme-orange-bg: #fff7ed;
+            --theme-orange-border: #fed7aa;
+            --theme-orange-icon: #f97316;
+            
+            --theme-green-bg: #f0fdf4;
+            --theme-green-border: #bbf7d0;
+            --theme-green-icon: #22c55e;
+            
+            --theme-red-bg: #fef2f2;
+            --theme-red-border: #fecaca;
+            --theme-red-icon: #ef4444;
+            
+            --theme-purple-bg: #f5f3ff;
+            --theme-purple-border: #ddd6fe;
+            --theme-purple-icon: #8b5cf6;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background: var(--container-bg);
+            width: 100%;
+            max-width: 800px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px -5px rgba(0,0,0,0.1), 0 10px 15px -5px rgba(0,0,0,0.05);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 850px;
+            transition: all 0.3s ease;
+        }
+
+        /* Header Area */
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            padding: 25px 30px;
+            text-align: center;
+            color: white;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .header h1 { margin: 0 0 5px 0; font-size: 22px; font-weight: 700; }
+        .header p { margin: 0; opacity: 0.95; font-size: 14px; font-weight: 300; }
+        
+        .header-home-btn {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white; padding: 6px 12px;
+            border-radius: 20px; cursor: pointer;
+            font-family: 'Sarabun'; font-weight: 600; font-size: 13px;
+            display: flex; align-items: center; gap: 6px;
+            backdrop-filter: blur(4px);
+        }
+        .header-home-btn:hover { background: rgba(255,255,255,0.3); }
+        
+        /* Save Slot Indicator in Header */
+        .slot-badge-container {
+            display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 8px;
+        }
+        .slot-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(0,0,0,0.2); padding: 4px 12px;
+            border-radius: 12px; font-size: 13px;
+        }
+        .header-edit-btn {
+            background: rgba(255,255,255,0.2); border: none; cursor: pointer;
+            color: white; border-radius: 50%; width: 24px; height: 24px;
+            display: flex; align-items: center; justify-content: center; font-size: 12px;
+            transition: 0.2s;
+        }
+        .header-edit-btn:hover { background: rgba(255,255,255,0.4); }
+
+        /* Progress Bar */
+        .progress-container { background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+        .progress-wrapper { background: #e2e8f0; height: 6px; width: 100%; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #059669); width: 0%; transition: width 0.6s; }
+        .stats { padding: 10px 30px; font-size: 13px; color: var(--text-muted); font-weight: 600; display: flex; justify-content: space-between; }
+
+        /* Step Indicators */
+        .step-indicators { display: flex; justify-content: center; padding: 15px 0; background: #fff; border-bottom: 1px solid #f1f5f9; }
+        .step-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; margin: 0 6px; transition: all 0.3s; }
+        .step-dot.active { background: var(--primary); transform: scale(1.3); }
+        .step-dot.completed { background: #10b981; }
+
+        /* Content */
+        .content { padding: 20px 30px; flex-grow: 1; overflow-y: auto; position: relative; }
+        .step-section { display: none; animation: fadeIn 0.4s ease; }
+        .step-section.active { display: block; }
+        .section-title { font-size: 18px; font-weight: 700; margin: 0 0 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; }
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 12px; color: white; margin-right: 10px; text-transform: uppercase; }
+
+        /* Tasks */
+        .task-item { display: flex; align-items: flex-start; padding: 15px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #f1f5f9; background: white; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .task-item:hover { transform: translateY(-2px); border-color: #e2e8f0; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+        .task-item.checked { opacity: 0.75; background: #f8fafc; border-color: #e2e8f0; }
+        .checkbox-custom { width: 22px; height: 22px; border: 2px solid #cbd5e1; border-radius: 6px; margin-right: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; }
+        .task-item.checked .checkbox-custom { background: #10b981; border-color: #10b981; }
+        .task-item.checked .checkbox-custom svg { transform: scale(1); }
+        .task-text { font-weight: 600; font-size: 15px; display: block; margin-bottom: 3px; }
+        .task-detail { font-size: 13px; color: var(--text-muted); }
+        .checkbox-custom svg { width: 14px; height: 14px; color: white; transform: scale(0); transition: 0.2s; }
+        
+        /* Action Links within Tasks */
+        .task-actions { margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .action-link {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 12px; text-decoration: none;
+            background: #eff6ff; color: var(--primary);
+            padding: 4px 10px; border-radius: 15px;
+            border: 1px solid var(--theme-blue-border);
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .action-link:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Themes */
+        .theme-blue .badge { background: var(--theme-blue-icon); } .theme-blue .task-item { border-left: 4px solid var(--theme-blue-icon); }
+        .theme-orange .badge { background: var(--theme-orange-icon); } .theme-orange .task-item { border-left: 4px solid var(--theme-orange-icon); }
+        .theme-green .badge { background: var(--theme-green-icon); } .theme-green .task-item { border-left: 4px solid var(--theme-green-icon); }
+        .theme-red .badge { background: var(--theme-red-icon); } .theme-red .task-item { border-left: 4px solid var(--theme-red-icon); }
+        .theme-purple .badge { background: var(--theme-purple-icon); } .theme-purple .task-item { border-left: 4px solid var(--theme-purple-icon); }
+
+        /* Calculator */
+        .calculator-panel { margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; cursor: auto; }
+        .calc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+        .calc-row label { width: 130px; color: var(--text-muted); font-weight: 500; }
+        .calc-input { padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; width: 100px; font-family: inherit; }
+        .calc-input:focus { outline: none; border-color: var(--primary); }
+        .calc-input:disabled { background: #e2e8f0; color: #64748b; cursor: not-allowed; border-color: #cbd5e1; }
+        .calc-result { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1; font-weight: 700; color: var(--primary); text-align: right; }
+        .warning-text { color: #ef4444; font-size: 12px; font-weight: 700; margin-left: 5px; display: none; }
+        .input-text-area { width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; font-family: 'Sarabun'; margin-top: 5px; box-sizing: border-box; }
+        
+        /* Date Rows */
+        .date-row { display: flex; gap: 5px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; background: white; padding: 5px; border-radius: 6px; border: 1px solid #e2e8f0; }
+        .remove-date-btn { background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 12px; }
+        .remove-date-btn:hover { background: #fecaca; }
+
+        /* Summary Box */
+        .summary-box { background: #fff; border: 2px solid #e2e8f0; border-radius: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom: 20px; }
+        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #f1f5f9; font-size: 14px; }
+        .summary-total { margin-top: 15px; padding: 15px; background: var(--theme-blue-bg); border-radius: 10px; font-weight: 700; display: flex; justify-content: space-between; color: var(--primary-dark); font-size: 18px; }
+
+        /* Save Slots UI */
+        .slots-grid { display: grid; gap: 15px; padding: 10px; }
+        .slot-card {
+            background: white; border: 2px solid #e2e8f0; border-radius: 16px; padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: all 0.2s; cursor: pointer; position: relative;
+        }
+        .slot-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.05); border-color: var(--theme-blue-border); }
+        .slot-card.empty { border-style: dashed; opacity: 0.8; }
+        .slot-info h3 { margin: 0 0 5px 0; font-size: 16px; color: var(--text-main); font-weight: 700; }
+        .slot-info p { margin: 0; font-size: 13px; color: var(--text-muted); }
+        .slot-status { font-size: 12px; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
+        .status-empty { background: #f1f5f9; color: #94a3b8; }
+        .status-active { background: #dcfce7; color: #166534; }
+        
+        .slot-actions { display: flex; gap: 8px; }
+        .btn-icon { background: none; border: 1px solid #e2e8f0; cursor: pointer; padding: 8px; border-radius: 50%; transition: 0.2s; color: #64748b; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; }
+        .btn-icon:hover { background: #f1f5f9; color: var(--text-main); border-color: #cbd5e1; }
+        .btn-delete:hover { background: #fef2f2; color: #ef4444; border-color: #fca5a5; }
+        .btn-edit:hover { background: #eff6ff; color: var(--primary); border-color: var(--theme-blue-border); }
+        .btn-print-slot:hover { background: #f0fdf4; color: #15803d; border-color: #86efac; }
+        
+        /* Home Contact Button */
+        .home-contact-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #f8fafc; color: #64748b;
+            padding: 10px 24px; border-radius: 30px;
+            text-decoration: none; font-weight: 600; font-size: 14px;
+            border: 1px solid #e2e8f0; transition: all 0.2s;
+            cursor: pointer;
+            font-family: 'Sarabun', sans-serif;
+        }
+        .home-contact-btn:hover {
+            background: white; color: var(--primary); border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1); transform: translateY(-2px);
+        }
+
+        /* Footer & Modals */
+        .footer { padding: 20px 30px; background: white; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; }
+        .nav-btn { border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Sarabun'; }
+        .btn-prev { background: #f1f5f9; color: #64748b; }
+        .btn-next { background: var(--primary); color: white; }
+        .btn-print { background: var(--text-main); color: white; width: 100%; margin-bottom: 10px; justify-content: center; }
+        .btn-save { background: #10b981; color: white; width: 100%; margin-bottom: 10px; justify-content: center; }
+        .btn-save:hover { background: #059669; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(2px); }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
+        .modal-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .select-card { border: 2px solid #e2e8f0; padding: 15px; border-radius: 12px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .select-card:hover { border-color: var(--primary); background: var(--theme-blue-bg); }
+        .select-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+        
+        .modal-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 10px; font-family: 'Sarabun'; font-size: 16px; box-sizing: border-box; transition: 0.2s; }
+        .modal-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .input-error { border-color: #ef4444; animation: shake 0.3s; }
+
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+
+        .hidden-visually { display: none !important; }
+        .hidden { display: none !important; } /* Standard hidden class */
+        .hidden-row { display: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- PRINT CSS FIXED (Aggressive Reset) --- */
+        @media print {
+            @page { size: A4; margin: 1cm; }
+            body { 
+                background: white !important; 
+                display: block !important;
+                height: auto !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                font-size: 12pt;
+                color: black !important;
+                overflow: visible !important; /* Force scrollbars off/visible */
+            }
+            .container { 
+                position: static !important;
+                width: 100% !important; 
+                max-width: 100% !important; 
+                height: auto !important;
+                box-shadow: none !important; 
+                border: none !important; 
+                margin: 0 !important; 
+                padding: 0 !important;
+                display: block !important;
+                overflow: visible !important;
+            }
+            .content { 
+                overflow: visible !important; 
+                height: auto !important; 
+                padding: 0 !important;
+                display: block !important;
+                margin: 0 !important;
+            }
+            
+            /* Header adjustments for print */
+            .header {
+                background: none !important;
+                color: black !important;
+                padding: 10px 0;
+                box-shadow: none !important;
+                text-align: left;
+                border-bottom: 2px solid #000;
+                margin-bottom: 20px;
+                display: block !important;
+            }
+            .header h1 { font-size: 18pt; color: black; margin-bottom: 5px; }
+            .header p { display: none; } 
+            
+            /* Hide UI elements */
+            .header-home-btn, .header-edit-btn, #progress-area, #step-nav, .footer, .slot-actions, .action-link, .remove-date-btn, .btn-icon, .btn-save, .btn-print, .btn-reset, .home-contact-btn, #welcome-screen, .modal-overlay, .warning-text, .badge { 
+                display: none !important; 
+            }
+
+            /* Show Content */
+            #checklist-steps, #slot-indicator, .step-section { 
+                display: block !important; 
+                visibility: visible !important;
+            }
+            
+            /* Step styling */
+            .step-section { margin-bottom: 30px; page-break-inside: avoid; }
+            .section-title { 
+                border-bottom: 1px solid #000; 
+                color: black; 
+                font-size: 14pt; 
+                margin-bottom: 15px;
+            }
+            
+            /* Task items */
+            .task-item { 
+                border: none; 
+                box-shadow: none; 
+                padding: 5px 0; 
+                page-break-inside: avoid;
+            }
+            .task-item.hidden { display: none !important; }
+            
+            /* Calculator/Inputs */
+            .calculator-panel { 
+                background: none; 
+                border: none; 
+                padding: 0; 
+                margin-top: 5px; 
+            }
+            input, select, textarea {
+                border: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                font-weight: 600;
+                color: black !important;
+                width: auto !important;
+                display: inline-block;
+            }
+            
+            /* Checkbox simulation */
+            .checkbox-custom { border: 2px solid #000; }
+            .task-item.checked .checkbox-custom { background: #000; border-color: #000; }
+            
+            /* Summary Box specific */
+            .summary-box { border: 1px solid #000; box-shadow: none; }
+            .summary-total { background: #eee; color: black; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- Header -->
+        <div class="header">
+            <button id="header-home-btn" class="header-home-btn hidden-visually" onclick="confirmBackToHome()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                หน้าหลัก
+            </button>
+            
+            <h1>📋 รายการตรวจสอบโครงการฝึกอบรม (ศ.1)</h1>
+            <p>ระบบบันทึกแบบฟอร์มอัตโนมัติ (Multi-Save)</p>
+            <div id="slot-indicator" class="slot-badge-container hidden-visually">
+                <span class="slot-badge" id="slot-name-badge"></span>
+                <button class="header-edit-btn" onclick="openRenameModal(currentSlotId)" title="เปลี่ยนชื่อโครงการ">✎</button>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div id="progress-area" class="progress-container hidden-visually">
+            <div class="progress-wrapper"><div class="progress-fill" id="progressBar"></div></div>
+            <div class="stats"><span id="progressText">รอเริ่ม...</span><span id="percentText" style="color:var(--primary);">0%</span></div>
+        </div>
+        
+        <!-- Step Indicators -->
+        <div id="step-nav" class="step-indicators hidden-visually">
+            <div class="step-dot active" id="dot-1"></div><div class="step-dot" id="dot-2"></div><div class="step-dot" id="dot-3"></div><div class="step-dot" id="dot-4"></div><div class="step-dot" id="dot-5"></div><div class="step-dot" id="dot-6"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            
+            <!-- Welcome / Slot Selection Screen -->
+            <div id="welcome-screen">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 5px;">เลือกรายการที่บันทึกไว้</h2>
+                    <p style="color: var(--text-muted);">เลือกช่องว่างเพื่อสร้างใหม่ หรือเลือกช่องที่มีข้อมูลเพื่อทำต่อ</p>
+                </div>
+
+                <div class="slots-grid" id="slots-container">
+                    <!-- Slots will be generated by JS -->
+                </div>
+
+                <!-- Contact Button -->
+                <div style="margin-top: auto; padding-top: 40px; text-align: center; padding-bottom: 10px;">
+                    <button class="home-contact-btn" onclick="copyContactEmail(this)">
+                        📧 ติดต่อเจ้าหน้าที่ : nutthapol.kaewr@airportthai.co.th
+                    </button>
+                </div>
+            </div>
+
+            <!-- CHECKLIST STEPS -->
+            <div id="checklist-steps" class="hidden-visually">
+                
+                <!-- STEP 1 -->
+                <div id="step-1" class="step-section theme-blue active">
+                    <div class="section-title"><div><span class="badge">ส่วนที่ 1</span> ข้อมูลทั่วไปโครงการ</div></div>
+                    <div class="task-item" id="task-1" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content">
+                            <span class="task-text">ระบุชื่อโครงการและหลักการเหตุผล</span>
+                            <span class="task-detail">ระบุยุทธศาสตร์และกลยุทธ์ที่เกี่ยวข้องให้ชัดเจน</span>
+                            <div class="task-actions" onclick="event.stopPropagation()">
+                                <a href="https://airportthai-my.sharepoint.com/:i:/g/personal/nutthapol_kaewr_airportthai_co_th/IQD71zPKqeRWRY988nSrsoJAAaw1J9D4FHqgqcy0URhAgAI?e=Ioj7dH" target="_blank" class="action-link">📖 ดูยุทธศาสตร์ ทอท.</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="task-item" id="task-2" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content">
+                            <span class="task-text">ตรวจสอบสิทธิ์ "ค่าทำงานในวันหยุด"</span>
+                            <span class="task-detail">กรณีมีพนักงานกะ (ต้องเป็น 1 ใน 120 หลักสูตร สบวท.)</span>
+                            <div class="task-actions" onclick="event.stopPropagation()">
+                                <a href="https://airportthai-my.sharepoint.com/:x:/g/personal/nutthapol_kaewr_airportthai_co_th/IQBB7kyjIj41QLt_OWvzEA-wAe-CXQeO_1t4zch8ge8Ptis?e=bnekxv" target="_blank" class="action-link">📖 ดู 120 หลักสูตร สบวท.</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="task-item" id="task-3" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content">
+                            <span class="task-text">กำหนดวัตถุประสงค์และผลลัพธ์</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2 -->
+                <div id="step-2" class="step-section theme-orange">
+                    <div class="section-title"><div><span class="badge">ส่วนที่ 2</span> หลักสูตร สถานที่ และผู้เข้าอบรม</div></div>
+                    
+                    <div class="task-item" id="task-4" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content">
+                            <span class="task-text">จัดทำรายละเอียดวิชาและตารางฝึกอบรม</span>
+                            <span class="task-detail">แนบกำหนดการและหัวข้อวิชาให้ชัดเจน</span>
+                        </div>
+                    </div>
+
+                    <!-- Date & Location -->
+                    <div class="task-item" id="task-date-loc" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content" style="width: 100%;">
+                            <span class="task-text">วัน เวลา และ สถานที่</span>
+                            <div class="calculator-panel" onclick="event.stopPropagation()">
+                                
+                                <div id="date-rows-container">
+                                    <!-- Dynamic rows will go here -->
+                                </div>
+                                <button class="action-link" style="margin-top:5px;" onclick="addDateRow(); event.stopPropagation();">➕ เพิ่มช่วงวัน</button>
+
+                                <div class="calc-result" id="trainingDaysResult" style="text-align:left; color:var(--text-muted); font-size:13px; border:none; margin-top:5px; padding-top:0;">รวมระยะเวลา: 0 วัน</div>
+                                
+                                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #cbd5e1;">
+                                    
+                                    <!-- Internal Logic -->
+                                    <div id="loc-internal-opt" class="hidden-visually">
+                                        <div class="task-item" style="border:none; padding:5px; margin:0; box-shadow:none; background:none;">
+                                            <input type="checkbox" id="checkRoomInternal" style="margin-right:8px;"> <span style="font-size:14px;">จองห้องฝึกอบรมภายใน ทอท.</span>
+                                        </div>
+                                    </div>
+                                    <!-- External Logic (Shared) -->
+                                    <div id="loc-external-opt" class="hidden-visually">
+                                        <div class="task-item" style="border:none; padding:5px; margin:0; box-shadow:none; background:none; flex-wrap:wrap;">
+                                            <div style="width:100%; margin-bottom:5px;"><input type="checkbox" id="checkHotelExternal" style="margin-right:8px;"> <b>จองโรงแรม/สถานที่</b></div>
+                                            <input type="text" id="hotelName" class="modal-input" placeholder="ชื่อโรงแรม/สถานที่..." style="margin-bottom:5px; padding:6px;">
+                                            <input type="text" id="hotelProvince" class="modal-input" placeholder="จังหวัด..." style="padding:6px;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="task-actions" style="margin-top:10px;">
+                                    <a href="https://airportthai-my.sharepoint.com/:x:/g/personal/nutthapol_kaewr_airportthai_co_th/IQAkxEF63QakRasY1GeCmsgGAQkHCiNXU-JqGhfdzO7BUmQ?e=M9qjWl" target="_blank" class="action-link">📖 ตัวอย่างตารางการฝึกอบรม</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Trainee Section -->
+                    <div class="task-item" id="task-trainee" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content" style="width: 100%;">
+                            <span class="task-text">ผู้เข้ารับการฝึกอบรม</span>
+                            <div class="calculator-panel" onclick="event.stopPropagation()">
+                                <div class="calc-row">
+                                    <label style="width:160px;">1. พนักงานปกติ (คน):</label>
+                                    <input type="number" id="traineeNormal" value="0" min="0" class="calc-input" oninput="updateTraineeCount()">
+                                </div>
+                                <div class="calc-row">
+                                    <label style="width:160px;">2. พนักงานกะ (คน):</label>
+                                    <input type="number" id="traineeShift" value="0" min="0" class="calc-input" oninput="updateTraineeCount()">
+                                    <span class="warning-text" style="display:inline; color:#64748b; font-weight:400; font-size:11px;">(คิดค่าทำงานวันหยุด)</span>
+                                </div>
+                                <div class="task-actions" style="margin-top:10px;">
+                                    <a href="https://airportthai-my.sharepoint.com/:x:/g/personal/nutthapol_kaewr_airportthai_co_th/IQCBcl3zeH7QQ7JtWlyZJZfsAUH0czarbkkCiM-NfPGF8C0?e=PxxGKm" target="_blank" class="action-link">📖 ดูตัวอย่างรายชื่อผู้เข้ารับการฝึกอบรม</a>
+                                </div>
+                                <div class="calc-result" id="traineeTotalResult" style="color:var(--text-main); border-top:1px dashed #cbd5e1; margin-top:10px; padding-top:10px;">
+                                    รวมทั้งหมด: 0 คน
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Training Method -->
+                    <div class="task-item" id="task-method" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content" style="width: 100%;">
+                            <span class="task-text">วิธีในการฝึกอบรม</span>
+                            <div class="calculator-panel" onclick="event.stopPropagation()" style="display:flex; flex-direction:column; gap:8px;">
+                                <div><input type="checkbox" id="methodLecture"> บรรยาย</div>
+                                <div><input type="checkbox" id="methodSeminar"> สัมมนา</div>
+                                <div><input type="checkbox" id="methodWorkshop"> ฝึกปฏิบัติ (Workshop)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3 -->
+                <div id="step-3" class="step-section theme-green">
+                    <div class="section-title"><div><span class="badge">ส่วนที่ 3</span> วิทยากรและผลที่คาดหวัง</div></div>
+                    
+                    <div class="task-item" id="task-lecturer" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content" style="width:100%;">
+                            <span class="task-text">ข้อมูลวิทยากร</span>
+                            <div class="calculator-panel" onclick="event.stopPropagation()">
+                                <div class="calc-row"><label style="width:180px; color:#1e293b; font-weight:600;">1. วิทยากรภายใน (คน):</label><input type="number" id="lecIntCount" value="0" class="calc-input"></div>
+                                <div class="sub-header" style="margin-top:10px; font-weight:600; font-size:13px;">2. วิทยากรภายนอก</div>
+                                <div class="calc-row"><label style="width:180px;">- ตัวบุคคล (คน):</label><input type="number" id="lecExtIndCount" value="0" class="calc-input"></div>
+                                <div class="calc-row"><label style="width:180px;">- ในนามบริษัท (ราย):</label><input type="number" id="lecExtComCount" value="0" class="calc-input"></div>
+                                <div class="task-actions" style="margin-top:10px;">
+                                    <a href="#" class="action-link">📄 ตัวอย่างประวัติ/ใบเสนอราคา</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task-item" id="task-results" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content" style="width:100%;">
+                            <span class="task-text">ผลที่คาดว่าจะได้รับ</span>
+                            <span class="task-detail">(ยืนยันว่ามีข้อมูลครบถ้วน)</span>
+                        </div>
+                    </div>
+
+                    <div class="task-item" id="task-evaluation" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content" style="width:100%;">
+                            <span class="task-text">การประเมินผลการฝึกอบรม</span>
+                            <span class="task-detail">(ยืนยันว่ามีข้อมูลครบถ้วน)</span>
+                        </div>
+                    </div>
+
+                    <div class="task-item" id="task-cert" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content" style="width:100%;">
+                            <span class="task-text">การรับรองผล (เงื่อนไขการผ่าน)</span>
+                            <span class="task-detail">(ยืนยันว่ามีข้อมูลครบถ้วน)</span>
+                        </div>
+                    </div>
+
+                    <div class="task-item" id="task-committee" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content" style="width:100%;">
+                            <span class="task-text">คณะผู้ดำเนินการฝึกอบรม</span>
+                            <span class="task-detail">(ยืนยันว่ามีข้อมูลครบถ้วน)</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- STEP 4 -->
+                <div id="step-4" class="step-section theme-red">
+                    <div class="section-title"><div><span class="badge">ส่วนที่ 4</span> ตรวจสอบงบประมาณ</div></div>
+                    
+                    <div class="task-item" id="task-budget-1" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content">
+                            <span class="task-text">ค่าวิทยากร</span>
+                            <div class="calculator-panel" onclick="event.stopPropagation()">
+                                <!-- Internal Lecturer -->
+                                <div class="sub-header" style="font-size:13px; font-weight:600; color:#4f46e5;">1. วิทยากรภายใน</div>
+                                <div class="calc-row"><label>จำนวน ชม.:</label><input type="number" id="speakerIntHours" value="0" min="0" class="calc-input" oninput="updateAllBudgets()"></div>
+                                <div class="calc-row"><label>อัตรา/ชม.:</label><input type="number" value="400" disabled class="calc-input"></div>
+                                
+                                <!-- External Lecturer -->
+                                <div class="sub-header" style="font-size:13px; font-weight:600; color:#f97316; margin-top:8px;">2. วิทยากรภายนอก</div>
+                                <div class="calc-row"><label>จำนวน ชม.:</label><input type="number" id="speakerExtHours" value="0" min="0" class="calc-input" oninput="updateAllBudgets()"></div>
+                                <div class="calc-row"><label>อัตรา/ชม.:</label><input type="number" id="speakerExtRate" value="0" class="calc-input" oninput="updateAllBudgets()"></div>
+                                <div class="warning-text" style="display:block; margin-top:2px; font-weight:400; color:#ef4444; font-size:11px;">(ไม่เกิน 2,000.- บ. ถ้าเกินต้องขออนุมัติ)</div>
+                                
+                                <div class="calc-result" id="speakerTotalResult">รวม: 0 บาท</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task-item" id="task-budget-speaker-lunch" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content">
+                            <span class="task-text" id="lunchLabel">ค่าอาหารกลางวัน (800.-)</span>
+                            <div style="font-size:12px; color:#64748b; font-weight:400; margin-top:2px; margin-bottom:5px;">(ผู้เข้ารับการฝึกอบรม, ผู้บริหาร, วิทยากร, ผู้สังเกตการณ์ และผู้ดำเนินโครงการ)</div>
+                            <div class="calculator-panel" onclick="event.stopPropagation()">
+                                <div class="calc-row"><label>จำนวนคน:</label><input type="number" id="lunchPeople" value="0" class="calc-input" oninput="updateAllBudgets()"></div>
+                                <div class="calc-row"><label>จำนวนมื้อ:</label><input type="number" id="lunchMeals" value="0" class="calc-input" oninput="updateAllBudgets()"></div>
+                                <div class="calc-row"><label>ราคา/มื้อ:</label><input type="number" value="800" class="calc-input" disabled></div>
+                                <div class="calc-result" id="lunchTotalResult">รวม: 0 บาท</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Internal Snack -->
+                    <div class="task-item" id="task-budget-int" data-type="internal" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content">
+                            <span class="task-text">ค่าอาหารว่าง/เครื่องดื่ม (เรทภายใน)</span>
+                            <div style="font-size:12px; color:#64748b; font-weight:400; margin-top:2px; margin-bottom:5px;">(ผู้เข้ารับการฝึกอบรม, ผู้บริหาร, วิทยากร, ผู้สังเกตการณ์ และผู้ดำเนินโครงการ)</div>
+                            <div class="calculator-panel" onclick="event.stopPropagation()">
+                                <div class="calc-row"><label>คน:</label><input type="number" id="snackIntPeople" value="1" class="calc-input" oninput="updateAllBudgets()"></div>
+                                <div class="calc-row"><label>มื้อ:</label><input type="number" id="snackIntMeals" value="1" class="calc-input" oninput="updateAllBudgets()"></div>
+                                <div class="calc-row"><label>ราคา/มื้อ:</label><input type="number" value="50" class="calc-input" disabled></div>
+                                <div class="calc-result" id="snackIntResult">รวม: 50 บาท</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- External Snack (Both BKK & Prov) -->
+                    <div class="task-item" id="task-budget-ext-snack" data-type="external" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content">
+                            <span class="task-text">ค่าอาหารว่าง/เครื่องดื่ม (เรทภายนอก)</span>
+                            <div style="font-size:12px; color:#64748b; font-weight:400; margin-top:2px; margin-bottom:5px;">(ผู้เข้ารับการฝึกอบรม, ผู้บริหาร, วิทยากร, ผู้สังเกตการณ์ และผู้ดำเนินโครงการ)</div>
+                            <div class="calculator-panel" onclick="event.stopPropagation()">
+                                <div class="calc-row"><label>คน:</label><input type="number" id="snackExtPeople" value="1" class="calc-input" oninput="updateAllBudgets()"></div>
+                                <div class="calc-row"><label>มื้อ:</label><input type="number" id="snackExtMeals" value="1" class="calc-input" oninput="updateAllBudgets()"></div>
+                                <div class="calc-row"><label>ราคา/มื้อ:</label><input type="number" value="300" class="calc-input" disabled></div>
+                                <div class="calc-result" id="snackExtResult">รวม: 300 บาท</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Other Expenses (ForAll) -->
+                    <div class="task-item" id="task-budget-other" data-type="all" onclick="toggleTask(this)">
+                         <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                         <div class="task-content">
+                            <span class="task-text">ค่าใช้จ่ายอื่นๆ</span>
+                            <div class="calculator-panel" onclick="event.stopPropagation()">
+                                <input type="text" id="otherExpName" class="modal-input" placeholder="ระบุประเภทค่าใช้จ่าย..." style="margin-bottom:8px; margin-top:0;">
+                                <div class="calc-row"><label>จำนวนเงินรวม:</label><input type="number" id="otherExpTotal" value="0" class="calc-input" oninput="updateAllBudgets()"></div>
+                                <div class="calc-result" id="otherExpResult">รวม: 0 บาท</div>
+                            </div>
+                         </div>
+                    </div>
+                    
+                    <!-- Accommodation (Prov Only) -->
+                     <div class="task-item" id="task-budget-accom" data-type="prov-only" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content">
+                            <span class="task-text">ค่าที่พัก (ต่างจังหวัด)</span>
+                            <div style="font-size:12px; color:#64748b; font-weight:400; margin-top:2px; margin-bottom:5px;">(ผู้เข้ารับการฝึกอบรม, ผู้บริหาร, วิทยากร, ผู้สังเกตการณ์ และผู้ดำเนินโครงการ)</div>
+                            <div class="calculator-panel" onclick="event.stopPropagation()">
+                                <div class="sub-header" style="font-size:13px; font-weight:600;">1. ระดับ 10 ขึ้นไป (เบิกจริง)</div>
+                                <div class="calc-row"><label style="width:50px;">ราคา:</label><input type="number" id="accomLvl10Price" value="0" class="calc-input" style="width:70px;" oninput="updateAllBudgets()"> <label style="width:30px; text-align:right;">คืน:</label><input type="number" id="accomLvl10Nights" value="0" class="calc-input" style="width:50px;" oninput="updateAllBudgets()"> <label style="width:30px; text-align:right;">คน:</label><input type="number" id="accomLvl10People" value="0" class="calc-input" style="width:50px;" oninput="updateAllBudgets()"></div>
+                                
+                                <div class="sub-header" style="font-size:13px; font-weight:600; margin-top:8px;">2. ระดับ 9 ลงมา (ไม่เกิน 2,400)</div>
+                                <div class="calc-row"><label style="width:50px;">ราคา:</label><input type="number" id="accomLvl9Price" value="2400" class="calc-input" style="width:70px;" oninput="updateAllBudgets()"> <label style="width:30px; text-align:right;">คืน:</label><input type="number" id="accomLvl9Nights" value="0" class="calc-input" style="width:50px;" oninput="updateAllBudgets()"> <label style="width:30px; text-align:right;">คน:</label><input type="number" id="accomLvl9People" value="0" class="calc-input" style="width:50px;" oninput="updateAllBudgets()"></div>
+                                
+                                <div class="calc-result" id="accomTotalResult">รวม: 0 บาท</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Driver (Prov Only) -->
+                    <div class="task-item" id="task-budget-driver" data-type="prov-only" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content">
+                            <span class="task-text">ค่าคนขับรถ</span>
+                            <div class="calculator-panel" onclick="event.stopPropagation()">
+                                <div class="sub-header" style="font-size:13px; font-weight:600;">1. รถเล็ก (1,200)</div>
+                                <div class="calc-row"><label style="width:50px;">คนขับ:</label><input type="number" id="driverSmallQty" value="0" class="calc-input" style="width:60px;" oninput="updateAllBudgets()"> <label style="width:40px; text-align:right;">วัน:</label><input type="number" id="driverSmallDays" value="0" class="calc-input" style="width:60px;" oninput="updateAllBudgets()"></div>
+                                
+                                <div class="sub-header" style="font-size:13px; font-weight:600; margin-top:5px;">2. รถใหญ่ (1,400)</div>
+                                <div class="calc-row"><label style="width:50px;">คนขับ:</label><input type="number" id="driverBigQty" value="0" class="calc-input" style="width:60px;" oninput="updateAllBudgets()"> <label style="width:40px; text-align:right;">วัน:</label><input type="number" id="driverBigDays" value="0" class="calc-input" style="width:60px;" oninput="updateAllBudgets()"></div>
+                                
+                                <div class="sub-header" style="font-size:13px; font-weight:600; margin-top:5px;">3. รถประจำตำแหน่ง (1,200)</div>
+                                <div class="calc-row"><label style="width:50px;">คนขับ:</label><input type="number" id="driverPosQty" value="0" class="calc-input" style="width:60px;" oninput="updateAllBudgets()"> <label style="width:40px; text-align:right;">วัน:</label><input type="number" id="driverPosDays" value="0" class="calc-input" style="width:60px;" oninput="updateAllBudgets()"></div>
+
+                                <div class="calc-result" id="driverTotalResult">รวม: 0 บาท</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mechanic (Prov Only) -->
+                     <div class="task-item" id="task-budget-mechanic" data-type="prov-only" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content">
+                            <span class="task-text">ค่าช่างประจำรถ</span>
+                            <div class="calculator-panel" onclick="event.stopPropagation()">
+                                <div class="calc-row"><label style="width:160px;">1. ค่าเช่าที่พัก (1,800) x วัน:</label><input type="number" id="mechAccomDays" value="0" class="calc-input" oninput="updateAllBudgets()"></div>
+                                <div class="calc-row"><label style="width:160px;">2. ค่าเบี้ยเลี้ยง (800) x วัน:</label><input type="number" id="mechAllowDays" value="0" class="calc-input" oninput="updateAllBudgets()"></div>
+                                <div class="calc-result" id="mechTotalResult">รวม: 0 บาท</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                
+                <!-- STEP 5 (Updated: SAP - Checklist Only) -->
+                <div id="step-5" class="step-section theme-orange">
+                    <div class="section-title"><div><span class="badge">ส่วนที่ 5</span> ลงระบบ SAP</div></div>
+                    
+                    <div class="task-item" id="task-sap" data-type="all" onclick="toggleTask(this)">
+                        <div class="checkbox-custom"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                        <div class="task-content">
+                            <span class="task-text">บันทึกข้อมูลฝึกอบรมลงในระบบ</span>
+                            <span class="task-detail">ตรวจสอบข้อมูลต่อไปนี้ในระบบ SAP:</span>
+                            <div style="margin-top:10px; padding:10px; background:#fff7ed; border-radius:8px; border:1px solid #fed7aa; color:#9a3412; font-size:14px;">
+                                <div>• D: รหัสหลักสูตร</div>
+                                <div>• E: รุ่นของหลักสูตร</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 6 (Summary) -->
+                <div id="step-6" class="step-section theme-blue">
+                    <div class="section-title"><div><span class="badge">สรุป</span> ภาพรวมโครงการ</div></div>
+                    <div class="summary-box">
+                        
+                        <div class="summary-row" style="border-bottom: 2px solid #e2e8f0; padding-bottom:12px; margin-bottom:12px;">
+                            <span style="font-weight:700;">จำนวนผู้เข้าอบรมทั้งหมด</span>
+                            <span id="sum-trainees" style="font-weight:700; color:var(--primary);">0 คน</span>
+                        </div>
+                        <div class="summary-row"><span>ค่าวิทยากร</span><span id="sum-speaker">0 บาท</span></div>
+                        <div class="summary-row"><span id="sum-lunch-label">ค่าอาหารกลางวัน (800.-)</span><span id="sum-lunch">0 บาท</span></div>
+                        <div class="summary-row" id="row-snack-int"><span>ค่าอาหารว่าง (ภายใน)</span><span id="sum-snack-int">0 บาท</span></div>
+                        <div class="summary-row hidden-visually" id="row-snack-ext"><span>ค่าอาหารว่าง (ภายนอก)</span><span id="sum-snack-ext">0 บาท</span></div>
+                        
+                        <!-- Other Expenses (All) -->
+                        <div class="summary-row" id="row-other-exp"><span>ค่าใช้จ่ายอื่นๆ</span><span id="sum-other-exp">0 บาท</span></div>
+                        
+                        <!-- Prov Only -->
+                        <div class="summary-row hidden-visually" id="row-accom"><span>ค่าที่พัก</span><span id="sum-accom">0 บาท</span></div>
+                        <div class="summary-row hidden-visually" id="row-driver"><span>ค่าคนขับรถ</span><span id="sum-driver">0 บาท</span></div>
+                        <div class="summary-row hidden-visually" id="row-mechanic"><span>ค่าช่างประจำรถ</span><span id="sum-mechanic">0 บาท</span></div>
+
+                        <div class="summary-total"><span>รวมทั้งสิ้น</span><span id="sum-grand-total">0 บาท</span></div>
+                    </div>
+                    <button class="nav-btn btn-save" onclick="manualSave()">💾 บันทึกแบบร่าง</button>
+                    <button class="nav-btn btn-print" onclick="saveAsPDF()">💾 บันทึกเป็น PDF</button>
+                    <button class="nav-btn btn-print" style="background:#ef4444; border-color:#ef4444; margin-top:5px;" onclick="confirmRestart()">🔄 เริ่มทำใหม่ (Reset)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer hidden-visually" id="footer-area">
+            <button id="btn-prev" class="nav-btn btn-prev" onclick="prevStep()">ย้อนกลับ</button>
+            <button id="btn-next" class="nav-btn btn-next" onclick="nextStep()">ถัดไป</button>
+        </div>
+        
+        <!-- Selection Modal -->
+        <div class="modal-overlay" id="typeModal">
+            <div class="modal-box">
+                <div class="modal-title">เริ่มโครงการใหม่</div>
+                <input type="text" id="newProjectNameInput" class="modal-input" placeholder="ระบุชื่อโครงการ (จำเป็น)..." maxlength="50">
+                
+                <!-- Step 1: Main Type -->
+                <div id="modal-step-1">
+                    <p style="margin-top:15px; margin-bottom:10px; color:var(--text-muted); font-size:14px;">เลือกประเภทการอบรม</p>
+                    <div class="modal-grid">
+                        <div class="select-card" onclick="selectMainType('internal')">
+                            <span class="select-icon">🏢</span>
+                            <b>อบรมภายใน</b>
+                        </div>
+                        <div class="select-card" onclick="selectMainType('external')">
+                            <span class="select-icon">🚌</span>
+                            <b>อบรมภายนอก</b>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: External Sub-Type -->
+                <div id="modal-step-2" class="hidden-visually">
+                    <p style="margin-top:15px; margin-bottom:10px; color:var(--text-muted); font-size:14px;">ระบุสถานที่อบรมภายนอก</p>
+                    <div class="modal-grid">
+                        <div class="select-card" onclick="selectExtType('bkk')">
+                            <span class="select-icon">🏨</span>
+                            <b>ในกรุงเทพฯ</b>
+                            <span style="font-size:11px; color:var(--text-muted);">(โรงแรม)</span>
+                        </div>
+                        <div class="select-card" onclick="selectExtType('prov')">
+                            <span class="select-icon">🌄</span>
+                            <b>ต่างจังหวัด</b>
+                        </div>
+                    </div>
+                    <button style="margin-top:20px; font-size:13px; background:none; border:none; color:#64748b; cursor:pointer;" onclick="backToStep1()">← ย้อนกลับ</button>
+                </div>
+
+                <button style="margin-top:20px; background:none; border:none; text-decoration:underline; cursor:pointer;" onclick="closeModal('typeModal')">ยกเลิก</button>
+            </div>
+        </div>
+        
+        <!-- Rename Modal -->
+        <div class="modal-overlay" id="renameModal">
+            <div class="modal-box">
+                <div class="modal-title">เปลี่ยนชื่อแบบฟอร์ม</div>
+                <input type="text" id="renameInput" class="modal-input" placeholder="ใส่ชื่อโครงการใหม่..." maxlength="30">
+                <div class="modal-grid">
+                    <button class="nav-btn btn-prev" style="justify-content:center;" onclick="closeModal('renameModal')">ยกเลิก</button>
+                    <button class="nav-btn btn-next" style="justify-content:center;" onclick="confirmRename()">บันทึก</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirm Modal -->
+        <div class="modal-overlay" id="confirmModal">
+            <div class="modal-box">
+                <div class="modal-title" id="confirmTitle">ยืนยัน</div>
+                <p id="confirmText">ข้อความ</p>
+                <div class="modal-grid">
+                    <button class="nav-btn btn-prev" style="justify-content:center;" onclick="closeModal('confirmModal')">ยกเลิก</button>
+                    <button class="nav-btn btn-next" style="justify-content:center;" id="confirmActionBtn">ยืนยัน</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Success Modal -->
+        <div class="modal-overlay" id="saveActionModal">
+            <div class="modal-box">
+                <div class="modal-title" style="color:#10b981;">✅ บันทึกเรียบร้อย</div>
+                <p>ข้อมูลถูกบันทึกในเครื่องของคุณแล้ว</p>
+                <div class="modal-grid">
+                    <button class="nav-btn btn-prev" style="justify-content:center;" onclick="closeModal('saveActionModal')">อยู่หน้านี้ต่อ</button>
+                    <button class="nav-btn btn-next" style="justify-content:center;" onclick="closeModal('saveActionModal'); confirmBackToHome();">กลับหน้าหลัก</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DATA MANAGEMENT ---
+        const SLOT_PREFIX = 'checklist_slot_';
+        let currentSlotId = null;
+        let currentSlotName = '';
+        let currentMode = ''; // 'internal', 'external'
+        let currentExtType = 'bkk'; // 'bkk', 'prov' (Default BKK)
+        let currentStep = 1;
+        const totalSteps = 6;
+        const formatter = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 });
+
+        // On Load
+        document.addEventListener('DOMContentLoaded', () => { renderSlots(); });
+
+        function renderSlots() {
+            const container = document.getElementById('slots-container');
+            container.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const data = localStorage.getItem(SLOT_PREFIX + i);
+                const slotData = data ? JSON.parse(data) : null;
+                const card = document.createElement('div');
+                card.className = `slot-card ${slotData ? '' : 'empty'}`;
+                
+                if (slotData) {
+                    let typeLabel = slotData.mode === 'internal' ? '🏢 ภายใน' : '🚌 ภายนอก';
+                    if(slotData.mode === 'external') {
+                        typeLabel += (slotData.extType === 'prov' ? ' (ต่างจังหวัด)' : ' (กทม.)');
+                    }
+                    const date = new Date(slotData.lastSaved).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', hour:'2-digit', minute:'2-digit' });
+                    card.innerHTML = `
+                        <div class="slot-info" onclick="loadSlot(${i})">
+                            <h3>${slotData.name || `Form #${i}`}</h3>
+                            <p style="margin-bottom:5px;">${typeLabel}</p>
+                            <span class="slot-status status-active">แก้ไขล่าสุด: ${date}</span>
+                        </div>
+                        <div class="slot-actions">
+                             <button class="btn-icon btn-print-slot" onclick="printSlot(${i}, event)">🖨️</button>
+                             <button class="btn-icon btn-edit" onclick="loadSlot(${i})">✏️</button>
+                            <button class="btn-icon btn-delete" onclick="deleteSlot(${i}, event)">🗑️</button>
+                        </div>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div class="slot-info" onclick="openTypeModal(${i})">
+                            <h3 style="color:#94a3b8;">Form #${i} (ว่าง)</h3>
+                            <p>คลิกเพื่อสร้างใหม่</p>
+                        </div>
+                        <div class="slot-actions"><button class="btn-icon" onclick="openTypeModal(${i})">➕</button></div>
+                    `;
+                }
+                container.appendChild(card);
+            }
+        }
+
+        // --- SLOT & MODAL ACTIONS ---
+        let tempSlotId = null;
+        function openTypeModal(slotId) {
+            tempSlotId = slotId;
+            document.getElementById('newProjectNameInput').value = ''; 
+            document.getElementById('newProjectNameInput').classList.remove('input-error');
+            
+            // Reset Modal View
+            document.getElementById('modal-step-1').classList.remove('hidden-visually');
+            document.getElementById('modal-step-2').classList.add('hidden-visually');
+            
+            document.getElementById('typeModal').classList.add('active');
+            document.getElementById('newProjectNameInput').focus();
+        }
+
+        function selectMainType(type) {
+            const nameInput = document.getElementById('newProjectNameInput');
+            const name = nameInput.value.trim();
+            if (!name) {
+                nameInput.classList.add('input-error');
+                return;
+            }
+
+            if (type === 'internal') {
+                startNewSlot('internal', name, 'bkk'); // extType ignored for internal
+            } else {
+                // Show Step 2
+                document.getElementById('modal-step-1').classList.add('hidden-visually');
+                document.getElementById('modal-step-2').classList.remove('hidden-visually');
+            }
+        }
+
+        function backToStep1() {
+            document.getElementById('modal-step-1').classList.remove('hidden-visually');
+            document.getElementById('modal-step-2').classList.add('hidden-visually');
+        }
+
+        function selectExtType(subType) {
+            const name = document.getElementById('newProjectNameInput').value.trim(); // Name is already validated
+            startNewSlot('external', name, subType);
+        }
+
+        function openRenameModal(slotId, event) {
+            if(event) event.stopPropagation();
+            tempSlotId = slotId;
+            const data = JSON.parse(localStorage.getItem(SLOT_PREFIX + slotId));
+            document.getElementById('renameInput').value = data.name || '';
+            document.getElementById('renameModal').classList.add('active');
+        }
+        function confirmRename() {
+            const newName = document.getElementById('renameInput').value.trim();
+            if(!newName) return;
+            const data = JSON.parse(localStorage.getItem(SLOT_PREFIX + tempSlotId));
+            data.name = newName;
+            if (currentSlotId === tempSlotId) currentSlotName = newName;
+            localStorage.setItem(SLOT_PREFIX + tempSlotId, JSON.stringify(data));
+            closeModal('renameModal');
+            renderSlots();
+            if(currentSlotId) enterApp(currentMode); // refresh header
+        }
+        function startNewSlot(mode, name, extType) {
+            closeModal('typeModal');
+            currentSlotId = tempSlotId;
+            currentMode = mode;
+            currentExtType = extType; 
+            currentSlotName = name;
+            resetFormUI();
+            saveCurrentState();
+            enterApp(mode);
+        }
+        function loadSlot(slotId) {
+            const data = JSON.parse(localStorage.getItem(SLOT_PREFIX + slotId));
+            if(!data) return;
+            currentSlotId = slotId;
+            currentMode = data.mode;
+            currentExtType = data.extType || 'bkk';
+            currentSlotName = data.name;
+            resetFormUI();
+            
+            data.checkedItems.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    if(el.tagName === 'INPUT' && el.type === 'checkbox') el.checked = true;
+                    else el.classList.add('checked');
+                }
+            });
+            for (const [key, value] of Object.entries(data.inputs)) {
+                const el = document.getElementById(key);
+                if(el && !el.disabled) {
+                     if(el.type === 'checkbox') el.checked = (value === 'true');
+                     else el.value = value;
+                }
+            }
+            // Restore Dates
+            const dateContainer = document.getElementById('date-rows-container');
+            dateContainer.innerHTML = '';
+            if (data.dateSchedule && data.dateSchedule.length > 0) {
+                data.dateSchedule.forEach(item => addDateRow(item.start, item.end));
+            } else {
+                addDateRow();
+            }
+            enterApp(currentMode);
+        }
+        function printSlot(slotId, event) {
+            if(event) event.stopPropagation();
+            loadSlot(slotId); 
+            showStep(6);
+            setTimeout(() => window.print(), 300);
+        }
+        function deleteSlot(slotId, event) {
+            if(event) event.stopPropagation();
+            showConfirm('ลบข้อมูล', `ต้องการลบข้อมูลใน Form #${slotId} ใช่หรือไม่?`, () => {
+                localStorage.removeItem(SLOT_PREFIX + slotId);
+                renderSlots();
+                closeModal('confirmModal');
+            });
+        }
+        function confirmRestart() {
+            showConfirm('เริ่มทำใหม่', 'ข้อมูลทั้งหมดจะถูกรีเซ็ต', () => {
+                resetFormUI();
+                saveCurrentState();
+                closeModal('confirmModal');
+                showStep(1);
+            });
+        }
+        function manualSave() {
+            saveCurrentState();
+            document.getElementById('saveActionModal').classList.add('active');
+        }
+        
+        function saveAsPDF() {
+            alert("ระบบจะเปิดหน้าต่างพิมพ์\nโปรดเลือกปลายทาง (Destination) เป็น 'Save as PDF' หรือ 'บันทึกเป็น PDF'");
+            window.print();
+        }
+
+        // --- APP LOGIC ---
+        function enterApp(mode) {
+            document.getElementById('welcome-screen').classList.add('hidden-visually');
+            document.getElementById('checklist-steps').classList.remove('hidden-visually');
+            document.getElementById('progress-area').classList.remove('hidden-visually');
+            document.getElementById('step-nav').classList.remove('hidden-visually');
+            document.getElementById('footer-area').classList.remove('hidden-visually');
+            document.getElementById('header-home-btn').classList.remove('hidden-visually');
+            document.getElementById('slot-indicator').classList.remove('hidden-visually');
+            
+            let badgeText = `${currentSlotName} (${mode==='internal'?'ภายใน':'ภายนอก'}`;
+            if(mode === 'external') badgeText += currentExtType==='prov' ? '-ตจว.)' : '-กทม.)';
+            else badgeText += ')';
+            document.getElementById('slot-name-badge').innerText = badgeText;
+
+            // Lunch Label Logic
+            if (currentMode === 'external' && currentExtType === 'prov') {
+                document.getElementById('lunchLabel').innerText = 'ค่าอาหาร';
+                document.getElementById('sum-lunch-label').innerText = 'ค่าอาหาร';
+            } else {
+                document.getElementById('lunchLabel').innerText = 'ค่าอาหารกลางวัน (800.-)';
+                document.getElementById('sum-lunch-label').innerText = 'ค่าอาหารกลางวัน (800.-)';
+            }
+
+            // Visibility Logic
+            document.querySelectorAll('.task-item').forEach(el => el.classList.add('hidden')); // Hide all first
+            
+            // Show Shared
+            document.querySelectorAll('.task-item[data-type="all"]').forEach(el => el.classList.remove('hidden'));
+
+            if(mode === 'internal') {
+                document.querySelectorAll('.task-item[data-type="internal"]').forEach(el => el.classList.remove('hidden'));
+                
+                document.getElementById('loc-internal-opt').classList.remove('hidden-visually');
+                document.getElementById('loc-external-opt').classList.add('hidden-visually');
+                
+                // Summary Visibility
+                document.getElementById('row-snack-int').classList.remove('hidden-visually');
+                document.getElementById('row-snack-ext').classList.add('hidden-visually');
+                // document.getElementById('row-other-exp').classList.add('hidden-visually'); // Now Visible for all
+                document.getElementById('row-accom').classList.add('hidden-visually');
+                document.getElementById('row-driver').classList.add('hidden-visually');
+                document.getElementById('row-mechanic').classList.add('hidden-visually');
+                
+            } else {
+                // External Base
+                document.getElementById('loc-internal-opt').classList.add('hidden-visually');
+                document.getElementById('loc-external-opt').classList.remove('hidden-visually');
+
+                // Check Ext Subtype
+                if(currentExtType === 'bkk') {
+                     // BKK: Shared + Snack Ext + Other
+                     document.querySelectorAll('.task-item[data-type="external"]').forEach(el => el.classList.remove('hidden'));
+                     document.querySelectorAll('.task-item[data-type="bkk-only"]').forEach(el => el.classList.remove('hidden'));
+                     
+                     // Summary
+                     document.getElementById('row-snack-int').classList.add('hidden-visually');
+                     document.getElementById('row-snack-ext').classList.remove('hidden-visually');
+                     // document.getElementById('row-other-exp').classList.remove('hidden-visually');
+                     
+                     document.getElementById('row-accom').classList.add('hidden-visually');
+                     document.getElementById('row-driver').classList.add('hidden-visually');
+                     document.getElementById('row-mechanic').classList.add('hidden-visually');
+
+                } else {
+                     // Prov: Shared + Snack Ext + Accom + Driver + Mechanic
+                     document.querySelectorAll('.task-item[data-type="external"]').forEach(el => el.classList.remove('hidden'));
+                     document.querySelectorAll('.task-item[data-type="prov-only"]').forEach(el => el.classList.remove('hidden'));
+
+                     // Summary
+                     document.getElementById('row-snack-int').classList.add('hidden-visually');
+                     document.getElementById('row-snack-ext').classList.remove('hidden-visually');
+                     // document.getElementById('row-other-exp').classList.add('hidden-visually'); 
+                     
+                     document.getElementById('row-accom').classList.remove('hidden-visually');
+                     document.getElementById('row-driver').classList.remove('hidden-visually');
+                     document.getElementById('row-mechanic').classList.remove('hidden-visually');
+                }
+            }
+            
+            updateAllBudgets();
+            updateTraineeCount();
+            calculateDays();
+            showStep(1);
+        }
+
+        function saveCurrentState() {
+            if(!currentSlotId) return;
+            const checked = [];
+            document.querySelectorAll('.task-item.checked').forEach(el => checked.push(el.id));
+            document.querySelectorAll('input[type="checkbox"]:checked').forEach(el => checked.push(el.id));
+            const inputs = {};
+            document.querySelectorAll('input, select, textarea').forEach(el => {
+                if(el.id && !el.classList.contains('date-start') && !el.classList.contains('date-end')) inputs[el.id] = el.value;
+            });
+            document.querySelectorAll('input[type="checkbox"]').forEach(el => { if(el.id) inputs[el.id] = el.checked ? 'true' : 'false'; });
+            
+            const dateRows = [];
+            document.querySelectorAll('.date-row').forEach(row => {
+                dateRows.push({
+                    start: row.querySelector('.date-start').value,
+                    end: row.querySelector('.date-end').value
+                });
+            });
+
+            const data = {
+                name: currentSlotName, mode: currentMode, extType: currentExtType,
+                lastSaved: new Date().toISOString(), checkedItems: checked, inputs: inputs, dateSchedule: dateRows
+            };
+            localStorage.setItem(SLOT_PREFIX + currentSlotId, JSON.stringify(data));
+        }
+
+        function resetFormUI() {
+            document.querySelectorAll('.task-item').forEach(el => el.classList.remove('checked'));
+            document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+            document.querySelectorAll('input').forEach(input => {
+                if (input.disabled || input.type === 'radio') return;
+                if (input.type === 'number') input.value = 0;
+                else input.value = '';
+            });
+            
+            // Set defaults if needed
+            document.getElementById('accomLvl9Price').value = 2400;
+
+            document.getElementById('date-rows-container').innerHTML = '';
+            addDateRow();
+            updateAllBudgets();
+        }
+
+        // --- CALCULATION LOGIC ---
+        
+        // Wrapper for auto-save
+        function wrap(fn) { return function() { fn.apply(this, arguments); saveCurrentState(); }}
+        
+        window.updateAllBudgets = wrap(_updateAllBudgets);
+        window.updateTraineeCount = wrap(_updateTraineeCount);
+        window.calculateDays = wrap(_calculateDays);
+        window.addDateRow = wrap(_addDateRow);
+        window.removeDateRow = wrap(_removeDateRow);
+
+        function _updateAllBudgets() {
+            // 1. Lecturer
+            const intTotal = val('speakerIntHours') * 400;
+            const extRate = val('speakerExtRate');
+            const extTotal = val('speakerExtHours') * extRate;
+            document.getElementById('speakerTotalResult').innerText = `รวม: ${formatter.format(intTotal + extTotal)}`;
+            document.getElementById('sum-speaker').innerText = formatter.format(intTotal + extTotal);
+
+            // 2. Lunch (800)
+            const lunchTotal = val('lunchPeople') * val('lunchMeals') * 800;
+            document.getElementById('lunchTotalResult').innerText = `รวม: ${formatter.format(lunchTotal)}`;
+            document.getElementById('sum-lunch').innerText = formatter.format(lunchTotal);
+
+            // 3. Snack
+            let snackTotal = 0;
+            if (currentMode === 'internal') {
+                snackTotal = val('snackIntPeople') * val('snackIntMeals') * 50;
+                document.getElementById('snackIntResult').innerText = `รวม: ${formatter.format(snackTotal)}`;
+                document.getElementById('sum-snack-int').innerText = formatter.format(snackTotal);
+            } else {
+                snackTotal = val('snackExtPeople') * val('snackExtMeals') * 300;
+                document.getElementById('snackExtResult').innerText = `รวม: ${formatter.format(snackTotal)}`;
+                document.getElementById('sum-snack-ext').innerText = formatter.format(snackTotal);
+            }
+
+            // 4. Other (Now just Total)
+            let otherTotal = val('otherExpTotal');
+            document.getElementById('otherExpResult').innerText = `รวม: ${formatter.format(otherTotal)}`;
+            document.getElementById('sum-other-exp').innerText = formatter.format(otherTotal);
+
+            // 5. Accom (Prov)
+            let accomTotal = 0;
+            if (currentMode === 'external' && currentExtType === 'prov') {
+                const l10 = val('accomLvl10Price') * val('accomLvl10Nights') * val('accomLvl10People');
+                const l9 = val('accomLvl9Price') * val('accomLvl9Nights') * val('accomLvl9People');
+                accomTotal = l10 + l9;
+                document.getElementById('accomTotalResult').innerText = `รวม: ${formatter.format(accomTotal)}`;
+                document.getElementById('sum-accom').innerText = formatter.format(accomTotal);
+            }
+
+            // 6. Driver (Prov)
+            let driverTotal = 0;
+            if (currentMode === 'external' && currentExtType === 'prov') {
+                const t1 = 1200 * val('driverSmallQty') * val('driverSmallDays');
+                const t2 = 1400 * val('driverBigQty') * val('driverBigDays');
+                const t3 = 1200 * val('driverPosQty') * val('driverPosDays');
+                driverTotal = t1 + t2 + t3;
+                document.getElementById('driverTotalResult').innerText = `รวม: ${formatter.format(driverTotal)}`;
+                document.getElementById('sum-driver').innerText = formatter.format(driverTotal);
+            }
+
+            // 7. Mechanic (Prov)
+            let mechTotal = 0;
+            if (currentMode === 'external' && currentExtType === 'prov') {
+                const m1 = 1800 * val('mechAccomDays');
+                const m2 = 800 * val('mechAllowDays');
+                mechTotal = m1 + m2;
+                document.getElementById('mechTotalResult').innerText = `รวม: ${formatter.format(mechTotal)}`;
+                document.getElementById('sum-mechanic').innerText = formatter.format(mechTotal);
+            }
+
+            // Grand Total
+            let grand = (intTotal + extTotal) + lunchTotal + snackTotal + otherTotal + accomTotal + driverTotal + mechTotal;
+            document.getElementById('sum-grand-total').innerText = formatter.format(grand);
+        }
+
+        function _updateTraineeCount() {
+            const total = val('traineeNormal') + val('traineeShift');
+            document.getElementById('traineeTotalResult').innerText = `รวมทั้งหมด: ${total} คน`;
+            document.getElementById('sum-trainees').innerText = `${total} คน`;
+        }
+
+        function _calculateDays() {
+            let total = 0;
+            document.querySelectorAll('.date-row').forEach(row => {
+                const d1 = new Date(row.querySelector('.date-start').value);
+                const d2 = new Date(row.querySelector('.date-end').value);
+                if (!isNaN(d1) && !isNaN(d2)) total += Math.ceil(Math.abs(d2 - d1) / (86400000)) + 1;
+            });
+            document.getElementById('trainingDaysResult').innerText = `รวมระยะเวลา: ${total} วัน`;
+        }
+
+        function _addDateRow(s='', e='') {
+            const div = document.createElement('div');
+            div.className = 'date-row';
+            div.innerHTML = `<label style="width:30px;">เริ่ม:</label><input type="date" class="calc-input date-start" value="${s}" onchange="calculateDays()"><label style="width:30px; text-align:right;">ถึง:</label><input type="date" class="calc-input date-end" value="${e}" onchange="calculateDays()"><button class="remove-date-btn" onclick="removeDateRow(this); event.stopPropagation();">ลบ</button>`;
+            document.getElementById('date-rows-container').appendChild(div);
+        }
+        function _removeDateRow(btn) { btn.parentElement.remove(); _calculateDays(); saveCurrentState(); }
+
+        function val(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+        // --- NAV & UTILS ---
+        function showStep(idx) {
+            for(let i=1; i<=totalSteps; i++) {
+                document.getElementById(`step-${i}`).classList.remove('active');
+                document.getElementById(`dot-${i}`).classList.remove('active', 'completed');
+                if(i<idx) document.getElementById(`dot-${i}`).classList.add('completed');
+            }
+            document.getElementById(`step-${idx}`).classList.add('active');
+            document.getElementById(`dot-${idx}`).classList.add('active');
+            
+            document.getElementById('btn-prev').disabled = (idx === 1);
+            document.getElementById('btn-next').style.display = (idx === totalSteps) ? 'none' : 'flex';
+            document.getElementById('btn-next').innerText = (idx === 6) ? 'สรุปผล' : 'ถัดไป';
+            currentStep = idx;
+            
+            if(idx === 6) updateAllBudgets();
+        }
+        function nextStep() { if(currentStep < totalSteps) showStep(currentStep + 1); }
+        function prevStep() { if(currentStep > 1) showStep(currentStep - 1); }
+        function toggleTask(el) { el.classList.toggle('checked'); updateProgress(); saveCurrentState(); }
+        function updateProgress() {
+            const visible = Array.from(document.querySelectorAll('.task-item:not(.hidden):not(.hidden-visually)'));
+            if(visible.length === 0) return;
+            const checked = visible.filter(e => e.classList.contains('checked')).length;
+            const pct = Math.round((checked / visible.length) * 100);
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('percentText').innerText = pct + '%';
+        }
+        function confirmBackToHome() {
+            document.getElementById('checklist-steps').classList.add('hidden-visually');
+            document.getElementById('welcome-screen').classList.remove('hidden-visually');
+            document.getElementById('progress-area').classList.add('hidden-visually');
+            document.getElementById('step-nav').classList.add('hidden-visually');
+            document.getElementById('footer-area').classList.add('hidden-visually');
+            document.getElementById('header-home-btn').classList.add('hidden-visually');
+            document.getElementById('slot-indicator').classList.add('hidden-visually');
+            renderSlots();
+        }
+        function showConfirm(t, tx, act) {
+            document.getElementById('confirmTitle').innerText = t;
+            document.getElementById('confirmText').innerText = tx;
+            document.getElementById('confirmActionBtn').onclick = act;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function forcePrint() { window.print(); }
+        function copyContactEmail(btn) {
+            navigator.clipboard.writeText('nutthapol.kaewr@airportthai.co.th');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ คัดลอกอีเมลเรียบร้อย';
+            setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+        }
+    </script>
+</body>
+</html>
